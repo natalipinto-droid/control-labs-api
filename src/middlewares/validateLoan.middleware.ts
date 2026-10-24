@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ICreateLoanDTO } from '../dtos/loadn.dto';
+import { ICreateLoanDTO } from '../dtos/loan.dto';
 
 const isCreateLoanDTO = (value: unknown): value is ICreateLoanDTO => {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
