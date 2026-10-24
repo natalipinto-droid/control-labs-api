@@ -6,9 +6,9 @@ import ambientesRoutes from './ambientes.routes'
 import equiposRoutes from './equipos.routes'
 
 
-const router = Router();
-router.use('/loans', loanRoutes);
-router.use('/users', usersRoutes);
-router.use('/ambientes', ambientesRoutes);
-router.use('/equipos', equiposRoutes);
-export default router;
+const apiRouter = Router();
+apiRouter.use('/loans', loanRoutes);
+apiRouter.use('/users', usersRoutes);
+apiRouter.use('/ambientes', ambientesRoutes);
+apiRouter.use('/equipos', equiposRoutes);
+export default apiRouter;
