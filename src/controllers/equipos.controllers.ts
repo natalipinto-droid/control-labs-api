@@ -1,29 +1,95 @@
 import { Request, Response } from 'express';
+import { equipoService } from '../container';
+import { DomainError } from '../errors/domain.errors';
+import { ICreateEquiposDTO, TipoEquipo, EstadoEquipo } from '../dtos/equipos.dto';
 
-export class equiposController {
-  public static newequipos = (req: Request, res: Response): void => {
-    // TODO: llamar al servicio con req.body y responder 201 con el préstamo creado.
-    res.status(501).json({
-      success: false,
-      message: 'el resgitro de ambientes todavía no está implementado.'
-    });
+export class EquipoController {
+  public static createEquipo = async (
+    req: Request<Record<string, string>, unknown, ICreateEquiposDTO>,
+    res: Response
+  ): Promise<void> => {
+    const equipo = await equipoService.createEquipo(req.body);
+    res.status(201).json({ success: true, data: equipo });
   };
 
-  public static getequipos = (req: Request, res: Response): void => {
-    // TODO: tomar los filtros de req.query, llamar al servicio y responder con los resultados.
-    res.status(501).json({
-      success: false,
-      message: ' todavía no está implementada.'
+  public static getEquiposByFilter = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const { roomId, tipo, estado } = req.query;
+
+    if (roomId !== undefined && typeof roomId !== 'string') {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro roomId debe ser un texto.'
+      );
+    }
+
+    if (tipo !== undefined && typeof tipo !== 'string') {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro tipo debe ser un texto.'
+      );
+    }
+
+    if (estado !== undefined && typeof estado !== 'string') {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro estado debe ser un texto.'
+      );
+    }
+
+    const validTipos: TipoEquipo[] = [
+      'COMPUTADOR',
+      'MOUSE',
+      'TECLADO',
+      'CARGADOR',
+      'TELEVISOR',
+      'CONTROL_TV'
+    ];
+
+    if (tipo !== undefined && !validTipos.includes(tipo as TipoEquipo)) {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro tipo no es válido.'
+      );
+    }
+
+    const validEstados: EstadoEquipo[] = [
+      'OPERATIVO',
+      'MANTENIMIENTO',
+      'FUERA_DE_SERVICIO'
+    ];
+
+    if (estado !== undefined && !validEstados.includes(estado as EstadoEquipo)) {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro estado no es válido.'
+      );
+    }
+
+    const equipos = await equipoService.getEquipos({
+      roomId,
+      tipo: tipo as TipoEquipo | undefined,
+      estado: estado as EstadoEquipo | undefined
     });
+
+    res.status(200).json({ success: true, data: equipos });
   };
 
-  public static updatestatus = (req: Request, res: Response): void => {
-    
-    // TODO: pasar id a la operación de consulta y responder con el préstamo encontrado.
-    res.status(501).json({
-      success: false,
-      message: `la actualizacion de estado todavía no está implementada.`
-    });
+  public static getEquipoById = async (
+    req: Request<{ id: string }>,
+    res: Response
+  ): Promise<void> => {
+    const equipo = await equipoService.getEquipoDetail(Number(req.params.id));
+    res.status(200).json({ success: true, data: equipo });
   };
 
+  public static updateEquipo = async (
+    req: Request<{ id: string }, unknown, Partial<ICreateEquiposDTO>>,
+    res: Response
+  ): Promise<void> => {
+    const equipo = await equipoService.updateEquipo(Number(req.params.id), req.body);
+    res.status(200).json({ success: true, data: equipo });
+  };
 }
