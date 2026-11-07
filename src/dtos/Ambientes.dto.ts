@@ -1,5 +1,8 @@
+export type EstadoAmbiente = 'OPERATIVO' | 'MANTENIMIENTO' | 'INACTIVO';
+
 export interface ICreateAmbientesDTO {
-    piso: number;
-    numeroAmbiente: number;
-    instructorACargo: string;
+  nombre: string;
+  bloque: string;
+  capacidadPcs: number;
+  estado?: EstadoAmbiente; // Es opcional porque en la BD tiene un DEFAULT 'OPERATIVO'
 }

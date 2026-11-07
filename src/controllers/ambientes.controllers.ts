@@ -1,29 +1,66 @@
 import { Request, Response } from 'express';
+import { ambienteService } from '../container';
+import { DomainError } from '../errors/domain.errors';
+import { ICreateAmbientesDTO, EstadoAmbiente } from '../dtos/Ambientes.dto';
 
-export class ambientesController {
-  public static getambientes = (req: Request, res: Response): void => {
-    // TODO: llamar al servicio con req.body y responder 201 con el préstamo creado.
-    res.status(501).json({
-      success: false,
-      message: 'la lista de ambientes todavía no está implementado.'
-    });
+export class AmbienteController {
+  public static createAmbiente = async (
+    req: Request<Record<string, string>, unknown, ICreateAmbientesDTO>,
+    res: Response
+  ): Promise<void> => {
+    const ambiente = await ambienteService.createAmbiente(req.body);
+    res.status(201).json({ success: true, data: ambiente });
   };
 
-  public static newambientes = (req: Request, res: Response): void => {
-    // TODO: tomar los filtros de req.query, llamar al servicio y responder con los resultados.
-    res.status(501).json({
-      success: false,
-      message: 'El registro todavía no está implementada.'
+  public static getAmbientesByFilter = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const { bloque, estado } = req.query;
+
+    if (bloque !== undefined && typeof bloque !== 'string') {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro bloque debe ser un texto.'
+      );
+    }
+
+    if (estado !== undefined && typeof estado !== 'string') {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro estado debe ser un texto.'
+      );
+    }
+
+    const validEstados: EstadoAmbiente[] = ['OPERATIVO', 'MANTENIMIENTO', 'INACTIVO'];
+    if (estado !== undefined && !validEstados.includes(estado as EstadoAmbiente)) {
+      throw new DomainError(
+        'VALIDATION_ERROR',
+        'El filtro estado no es válido.'
+      );
+    }
+
+    const ambientes = await ambienteService.getAmbientes({
+      bloque,
+      estado: estado as EstadoAmbiente | undefined
     });
+
+    res.status(200).json({ success: true, data: ambientes });
   };
 
-  public static updateambientes = (req: Request, res: Response): void => {
-    const { id } = req.params;
-    // TODO: pasar id a la operación de consulta y responder con el préstamo encontrado.
-    res.status(501).json({
-      success: false,
-      message: `los detalles del usuario: ${id} todavía no está implementada.`
-    });
+  public static getAmbienteById = async (
+    req: Request<{ id: string }>,
+    res: Response
+  ): Promise<void> => {
+    const ambiente = await ambienteService.getAmbienteDetail(Number(req.params.id));
+    res.status(200).json({ success: true, data: ambiente });
   };
 
+  public static updateAmbiente = async (
+    req: Request<{ id: string }, unknown, Partial<ICreateAmbientesDTO>>,
+    res: Response
+  ): Promise<void> => {
+    const ambiente = await ambienteService.updateAmbiente(Number(req.params.id), req.body);
+    res.status(200).json({ success: true, data: ambiente });
+  };
 }
