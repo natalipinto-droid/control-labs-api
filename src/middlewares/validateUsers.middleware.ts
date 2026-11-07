@@ -1,36 +1,51 @@
 import { Request, Response, NextFunction } from 'express';
 import { ICreateUserDTO } from '../dtos/User.dto';
 
-// 2. Función de guarda de tipo (Type Guard) para validar el payload
 const isCreateUserDTO = (value: unknown): value is ICreateUserDTO => {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-        return false;
-    }
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
 
-    const user = value as Record<string, unknown>;
-    return (
-        typeof user.nombre === 'string' && user.nombre.trim() !== '' &&
-        typeof user.apellido === 'string' && user.apellido.trim() !== '' &&
-        typeof user.ficha === 'number' && Number.isInteger(user.ficha) &&
-        typeof user.password === 'string' && user.password.trim() !== ''
-    );
+  const user = value as Record<string, unknown>;
+  const allowedFields = new Set([
+    'email',
+    'nombre',
+    'rol',
+    'activo'
+  ]);
+
+  // Validar que las llaves coincidan estrictamente con las permitidas
+  const hasValidKeys = Object.keys(user).every((key) => allowedFields.has(key));
+  if (!hasValidKeys) return false;
+
+  // Validar tipos y restricciones de la base de datos (sin password)
+  const isValidEmail = typeof user.email === 'string' && user.email.trim() !== '';
+  const isValidNombre = typeof user.nombre === 'string' && user.nombre.trim() !== '';
+  const isValidRol = typeof user.rol === 'string' && ['ADMIN', 'GUARDA', 'INSTRUCTOR'].includes(user.rol);
+  
+  // 'activo' es opcional ya que la base de datos tiene un DEFAULT TRUE
+  const isValidActivo = user.activo === undefined || typeof user.activo === 'boolean';
+
+  return (
+    isValidEmail &&
+    isValidNombre &&
+    isValidRol &&
+    isValidActivo
+  );
 };
 
-// 3. Middleware de Express para validar el request
 export const validateUserPayload = (
-    req: Request,
-    res: Response,
-    next: NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ): void => {
-    const body: unknown = req.body;
-    
-    if (!isCreateUserDTO(body)) {
-        res.status(400).json({
-            success: false,
-            error: 'Datos del usuario inválidos.'
-        });
-        return;
-    }
-
-    next();
+  const body: unknown = req.body;
+  if (!isCreateUserDTO(body)) {
+    res.status(400).json({
+      success: false,
+      error: 'Datos del usuario inválidos.'
+    });
+    return;
+  }
+  next();
 };

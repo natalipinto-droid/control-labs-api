@@ -1,6 +1,9 @@
+export type RolType = 'ADMIN' | 'GUARDA' | 'INSTRUCTOR';
+
 export interface ICreateUserDTO {
-    nombre: string;
-    apellido: string;
-    ficha: number; //
-    password: string;
+  email: string;
+  nombre: string;
+  rol: RolType;
+  activo?: boolean; // Es opcional (?) ya que en la BD tiene un DEFAULT TRUE
+ // Lo mantengo por si tu registro requiere contraseña
 }
